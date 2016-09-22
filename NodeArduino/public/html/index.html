@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head >
+    <meta charset="UTF-8">
+    <title>Strip control</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.2.0/css/bootstrap-slider.min.css">
+    <script
+            src="https://code.jquery.com/jquery-3.1.0.min.js"
+            integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.2.0/bootstrap-slider.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <style>
+      #redSlider .slider-selection {
+      	background: #fe5252;
+      }
+      #greenSlider .slider-selection {
+      	background: #6ece2a;
+      }
+      #blueSlider .slider-selection {
+      	background: #4566f6;
+      }
+      ul {
+        list-style-type: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div id="chat-box" class="well">
+          <ul id="chat-view" class="list-unstyled"></ul>
+          <ul>
+            <li>
+              <input id="ex1" data-slider-id='redSlider' type="text" data-slider-min="0" data-slider-max="255" data-slider-step="1" data-slider-value="0"/>
+            </li>
+
+            <li>
+              <input id="ex2" data-slider-id='greenSlider' type="text" data-slider-min="0" data-slider-max="255" data-slider-step="1" data-slider-value="0"/>
+            </li>
+
+            <li>
+              <input id="ex3" data-slider-id='blueSlider' type="text" data-slider-min="0" data-slider-max="255" data-slider-step="1" data-slider-value="0"/>
+            </li>
+          </ul>
+          Fade (ms): <input id="fade" type="text" value="0"> </br>
+          Flicker (ms): <input id="flick" type="text" value="0"> </br>
+          <button id="on">On</button>
+          <button id="off">Off</button>
+          <button id="toggle">Toggle</button>
+          <button id="party">Party mode!!!</button>
+
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var socket = io.connect();
+
+      socket.on('message', function(data) {
+          console.log(data.message);
+      });
+
+      $('#toggle').click(function() {
+        socket.emit('message', {'message': 'rgbToggle'});
+      });
+
+      $('#on').click(function() {
+        socket.emit('message', {'message': 'rgbOn'});
+      });
+
+      $('#off').click(function() {
+        socket.emit('message', {'message': 'rgbOff'});
+      });
+
+      $('#party').click(function() {
+        var vals = {'r': 255,
+                    'g': 255,
+                    'b': 255,
+                    't_dim': 0,
+                    'ms_flick': 50
+                    };
+        socket.emit('message', {'message': 'rgbChange', 'values': vals});
+      });
+
+      var d = new Date();
+      var last_send = d.getMilliseconds();
+
+      // With JQuery
+      var rSlider = $('#ex1').slider();
+
+
+      var gSlider = $('#ex2').slider();
+
+      var bSlider = $('#ex3').slider();
+
+      function sendValues() {
+        var vals = {'r': rSlider[0].value,
+                    'g': gSlider[0].value,
+                    'b': bSlider[0].value,
+                    't_dim': $('#fade').val(),
+                    'ms_flick': $('#flick').val(),
+                    };
+        socket.emit('message', {'message': 'rgbChange', 'values': vals});
+      }
+
+      $("#flick").change(function(e) {
+        socket.emit('message', {'message': 'rgbFlick',
+                                'values': {'ms_flick': e.target.value}
+                              });
+      });
+
+      rSlider.on('change', function(data) {
+        sendValues();
+      });
+
+      gSlider.on('change', function(data) {
+        sendValues();
+      });
+
+      bSlider.on('change', function(data) {
+        sendValues();
+      });
+
+
+      socket.on('initial', function(data) {
+        var values = data.values;
+        rSlider.slider('setValue', values.r);
+        gSlider.slider('setValue', values.g);
+        bSlider.slider('setValue', values.b);
+        $("#flick").val(values.t_dim);
+        $("#flick").val(values.ms_flick);
+      });
+
+
+    </script>
+  </body>
+
+
+</html>

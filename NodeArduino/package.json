@@ -1,0 +1,21 @@
+{
+  "name": "nodearduino",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0",
+    "fs": "0.0.1-security",
+    "serialport": "^4.0.1",
+    "serialport2": "0.0.5",
+    "socket.io": "^1.4.8"
+  },
+  "devDependencies": {
+    "nodemon": "^1.10.2"
+  }
+}
