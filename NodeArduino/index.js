@@ -43,7 +43,7 @@ var listener = io.listen(server);
 listener.on('connection', function(connection) {
   console.log('[WS] New connection');
 
-  arduino.rgbRequestCurrent(0);
+  arduino.rgbRequestCurrent(1);
   setTimeout(function() {
     connection.emit('initial', {'values': arduino.getCurrentStatus(1)});
   }, 200);
@@ -71,7 +71,6 @@ listener.on('connection', function(connection) {
     } else if (data.message === "rgbOff") {
       arduino.rgbOff(1);
     }
-    //console.log(data.message);
   });
 });
 

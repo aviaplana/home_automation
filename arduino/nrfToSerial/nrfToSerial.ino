@@ -4,7 +4,7 @@
 
 #define TYPE_CONFIRMATION 1
 
-byte buffer_ser[50];
+byte buffer_ser[35];
 byte payloadSize= 10;
 byte id;
 
@@ -25,19 +25,20 @@ void setup() {
   radio.startListening();
   Serial.begin(9600);
   
-  memset(buffer_ser, 0, 50);
+  memset(buffer_ser, 0, 35);
 }
 
 
 void loop() {
   if (checkMsg() && id <= num_pipes) {
     radio.stopListening();
-    radio.openWritingPipe(pipes[id]);
+    radio.openWritingPipe(pipes[id-1]);
     delay(1);
     
     bool ok = radio.write(&buffer_ser, payloadSize);
             
     radio.startListening();
+    delay(2);
     
     Serial.print("\\B");
     Serial.write((byte)TYPE_CONFIRMATION);
@@ -53,7 +54,7 @@ void loop() {
     
     while (!done)
     {
-      done = radio.read(&buffer_ser , pay_size);
+      done = radio.read(&buffer_ser, pay_size);
       delay(20);
     }
 
@@ -66,10 +67,9 @@ void loop() {
      *  | \B | Type | ID | payload | \E | 
      *     2    1      1     ?       2     Bytes
      */
-
     Serial.print("\\B");
     Serial.write(buffer_ser[0]); //type 
-    for (int i = 0; i < buffer_ser[1]; i++) {
+    for (int i = 0; i < buffer_ser[1]-1; i++) {
       Serial.write(buffer_ser[i + 2]);
     }
     Serial.print("\\E");
@@ -102,7 +102,7 @@ bool checkMsg() {
       id = c;
     } else if (c == '\\') {
       pre_end = pos;
-    } else if ((pre_end + 1 == pos) && c == 'E') {
+    } else if ((pre_end + 1 == pos) && (c == 'E')) {
       payloadSize = pos - 5; // \B + id + \E = 5 Bytes.
       return true;
     } else {

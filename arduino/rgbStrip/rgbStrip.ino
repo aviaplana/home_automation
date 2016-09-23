@@ -3,7 +3,7 @@
 #include "nRF24L01.h"
 #include "RF24.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #define PIN_R 3
 #define PIN_G 5
 #define PIN_B 6
@@ -55,6 +55,7 @@ unsigned int dim_int = 30;
 unsigned long last_dim = 0;
 unsigned long last_flick = 0;
 
+unsigned long test = 0;
 const uint64_t pipe = 0xF0F0F0F0A2LL;
 
 void setup() {
@@ -76,9 +77,9 @@ void setup() {
 
   radio.begin();
   radio.setRetries(15,15);
-  radio.enableDynamicPayloads();
-  radio.enableAckPayload();
-  
+  radio.setPayloadSize(12);
+    radio.enableAckPayload();
+
   radio.openReadingPipe(1,pipe);
   radio.startListening();
 }
@@ -98,12 +99,15 @@ void loop() {
     } 
   
     if ((ms_flick > 0) && ((millis() - last_flick) > ms_flick)) {
-      flick ? offLight() : changeLight();
+      flick ? changeLight() : offLight();
       last_flick = millis();
       flick = !flick;
     } 
   }
-  
+
+  if ((millis() - test) > 2000) {
+    test = millis();
+  }
   
   if (radio.available()) {
     bool done = false;
@@ -157,7 +161,7 @@ void storeDefaults() {
 void processPacket() {
   // 2 first bites are reserved.
   packet.instruction &= 0x3F;
-  
+
   switch (packet.instruction) {
     
     case INSTRUCTION::ALL:
@@ -240,6 +244,9 @@ void applyColorPacket() {
 
 void applyFlickPacket() {
   changeLight();
+  if (flick && ms_flick == 0) {
+    flick = false;
+  }
   ms_flick = packet.ms_flick;
   last_flick = millis();
 }
@@ -284,6 +291,8 @@ boolean sendPacket() {
     Serial.print(packet_ret.type);
     Serial.print(" ");
     Serial.print(packet_ret.pck_size);
+    Serial.print(" ");
+    Serial.print(packet_ret.pck.id);
     Serial.print(" ");
     Serial.print(packet_ret.pck.r);
     Serial.print(" ");

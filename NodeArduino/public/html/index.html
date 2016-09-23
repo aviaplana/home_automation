@@ -101,7 +101,7 @@
                     'g': gSlider[0].value,
                     'b': bSlider[0].value,
                     't_dim': $('#fade').val(),
-                    'ms_flick': $('#flick').val(),
+                    //'ms_flick': $('#flick').val(),
                     };
         socket.emit('message', {'message': 'rgbChange', 'values': vals});
       }
@@ -127,6 +127,7 @@
 
       socket.on('initial', function(data) {
         var values = data.values;
+        console.log(data);
         rSlider.slider('setValue', values.r);
         gSlider.slider('setValue', values.g);
         bSlider.slider('setValue', values.b);

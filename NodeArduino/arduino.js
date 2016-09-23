@@ -12,12 +12,12 @@ function Arduino() {
   lastSend = 0;
 
   serialport.list(function(err, ports) {
-    ports.forEach(function(port) {
+    /*ports.forEach(function(port) {
       if (port.comName.indexOf('cu.wchusbserial') !== -1) {
         portName = port.comName;
       }
-    });
-
+    });*/
+    portName = '/dev/cu.wchusbserial1d1130';
     this.myPort = new serialport(portName, {
         baudRate: 9600
     });
@@ -90,7 +90,7 @@ Arduino.prototype.getCurrentStatus = function (id) {
   }
 
   switch (id) {
-    case 0:
+    case 1:
       var temp = new packets.RGBPacket();
       return temp.getCurrentValues();
       break;
@@ -102,15 +102,13 @@ Arduino.prototype.getCurrentStatus = function (id) {
 
 Arduino.prototype.sendStripPacket = function (strip_packet, req, res) {
   var date = new Date();
-  var millis = date.getMilliseconds();
+  var millis = date.getTime();
 
-  if (toConfirm) {
-      if ((millis - lastSend) < 50) {
-        return;
-      } else {
-        console.log('[SP] Confirmation timed out');
-        toConfirm = false;
-      }
+  if ((millis - lastSend) < 45) {
+    return;
+  } else if (toConfirm) {
+    console.log('[SP] Confirmation timed out');
+    toConfirm = false;
   }
 
   if (myPort.isOpen()) {
@@ -120,8 +118,8 @@ Arduino.prototype.sendStripPacket = function (strip_packet, req, res) {
     packetSent = strip_packet;
 
     process.stdout.write('[SP] Sent ');
-    console.log(buffer);
-    lastSend = date.getMilliseconds();
+    console.log(strip_packet.getBuffer());
+    lastSend = date.getTime();
     toConfirm = true;
   } else {
     console.log('[SP] ERROR: Not connected to Arduino.')

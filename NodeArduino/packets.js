@@ -125,8 +125,8 @@ RGBPacket.prototype.processPacket = function(values) {
 
 /*
  *  Packet structure:
- *  | \B | Type | ID | Payload | \E |
- *     2    1     1      ?        2    Bytes
+ *  | \B | Type | Payload | \E |
+ *     2    1       ?        2    Bytes
  *
  *  RGBStrip payload structure:
  *  | id | r | g | b | is_on | reserved | instruction | ms_flick | t_dim |
@@ -134,36 +134,36 @@ RGBPacket.prototype.processPacket = function(values) {
  *    1    1   1   1              1                       2         2      Bytes
  */
 RGBPacket.prototype.interpreteSerialBuffer = function(buffer) {
-  var instruction = buffer.readUInt8(8);
+  var instruction = buffer.readUInt8(7);
   // First two bits of the byte are used for the on/off state and reserved
   instruction &= 0x3F;
-
+  this.instruction = instruction;
   if (instruction === 20) {
-    current_vals.r = buffer.readUInt8(5);
-    current_vals.g = buffer.readUInt8(6);
-    current_vals.b = buffer.readUInt8(7);
+    current_vals.r = buffer.readUInt8(4);
+    current_vals.g = buffer.readUInt8(5);
+    current_vals.b = buffer.readUInt8(6);
 
-    if ((buffer[8] >> 7) == 1) {
+    if ((buffer[7] >> 7) == 1) {
       current_vals.on = true;
     } else {
       current_vals.on = false;
     }
 
-    current_vals.ms_flick = buffer.readUInt16LE(9);
+    current_vals.ms_flick = buffer.readUInt16LE(8);
     current_vals.t_dim = buffer.readUInt16LE(10);
   }
 }
 
 RGBPacket.prototype.getBuffer = function() {
   buffer = Buffer.alloc(14);
-  buffer.writeUInt8(0, 2);    // pipe
-  buffer.writeUInt8(this.id, 3);    //payload size
+  buffer.writeUInt8(this.id, 2);    // pipe
+  buffer.writeUInt8(0, 3);    //payload size
   buffer.writeUInt8(this.r, 4);    //r
   buffer.writeUInt8(this.g, 5);    //g
   buffer.writeUInt8(this.b, 6);  //b
   buffer.writeUInt8(this.instruction, 7);    //instruction
   buffer.writeUInt16LE(this.ms_flick, 8); //ms_flick
-  buffer.writeUInt16LE(this.t_dim, 10); //t_dim
+  buffer.writeUInt16BE(this.t_dim, 10); //t_dim
   buffer.write(this.endBits, 12);
   buffer.write(this.startBits, 0);
 
