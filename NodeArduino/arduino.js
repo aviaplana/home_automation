@@ -17,7 +17,9 @@ function Arduino() {
         portName = port.comName;
       }
     });*/
-    portName = '/dev/cu.wchusbserial1d1130';
+    portName = '/dev/cu.wchusbserial1420';//'/dev/cu.usbserial-A7027D4F';
+    //portName = '/dev/cu.usbserial-A7027D4F';
+
     this.myPort = new serialport(portName, {
         baudRate: 9600
     });

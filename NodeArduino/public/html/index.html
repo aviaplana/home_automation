@@ -1,142 +1,117 @@
 <!DOCTYPE html>
-<html>
-  <head >
-    <meta charset="UTF-8">
-    <title>Strip control</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.2.0/css/bootstrap-slider.min.css">
-    <script
-            src="https://code.jquery.com/jquery-3.1.0.min.js"
-            integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s="
-            crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.2.0/bootstrap-slider.min.js"></script>
-    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-    <style>
-      #redSlider .slider-selection {
-      	background: #fe5252;
-      }
-      #greenSlider .slider-selection {
-      	background: #6ece2a;
-      }
-      #blueSlider .slider-selection {
-      	background: #4566f6;
-      }
-      ul {
-        list-style-type: none;
-      }
-    </style>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Control pannel</title>
+
+    <link rel="stylesheet" href="foundation.css">
+        <link rel="stylesheet" href="app.css">
+
+    <script type="text/javascript" src="/vendor/jquery.js"></script>
+    <script type="text/javascript" src="/vendor/foundation.min.js"></script>
+    <script type="text/javascript" src="/vendor/what-input.js"></script>
+    <script type="text/javascript" src="/vendor/socket.io.js"></script>
+
   </head>
   <body>
-    <div class="container">
-      <div class="row">
-        <div id="chat-box" class="well">
-          <ul id="chat-view" class="list-unstyled"></ul>
-          <ul>
-            <li>
-              <input id="ex1" data-slider-id='redSlider' type="text" data-slider-min="0" data-slider-max="255" data-slider-step="1" data-slider-value="0"/>
-            </li>
+    <header>
+      <div class="top-bar">
+        RGB control pannel
+      </div>
+    </header>
 
-            <li>
-              <input id="ex2" data-slider-id='greenSlider' type="text" data-slider-min="0" data-slider-max="255" data-slider-step="1" data-slider-value="0"/>
-            </li>
-
-            <li>
-              <input id="ex3" data-slider-id='blueSlider' type="text" data-slider-min="0" data-slider-max="255" data-slider-step="1" data-slider-value="0"/>
-            </li>
-          </ul>
-          Fade (ms): <input id="fade" type="text" value="0"> </br>
-          Flicker (ms): <input id="flick" type="text" value="0"> </br>
-          <button id="on">On</button>
-          <button id="off">Off</button>
-          <button id="toggle">Toggle</button>
-          <button id="party">Party mode!!!</button>
-
+    <div class="row">
+      <div class="small-12 columns">
+        <div class="small-9 columns">
+          <div class="slider" id="rSlider" data-slider data-start="0" data-end="255">
+            <span class="slider-handle" id="rHandle" style="background-color:#ec5840;" data-slider-handle role="slider" tabindex="1" aria-controls="red"></span>
+            <span class="slider-fill" data-slider-fill></span>
+          </div>
+        </div>
+        <div class="small-3 columns">
+          <input type="number" id="red">
         </div>
       </div>
     </div>
 
-    <script>
-      var socket = io.connect();
+    <div class="row">
+      <div class="small-12 columns">
+        <div class="small-9 columns">
+          <div class="slider" id="gSlider" data-slider data-start="0" data-end="255">
+            <span class="slider-handle" id="gHandle" style="background-color:#3adb76;"  data-slider-handle role="slider" tabindex="1" aria-controls="green"></span>
+            <span class="slider-fill" data-slider-fill></span>
+          </div>
+        </div>
+        <div class="small-3 columns">
+          <input type="number" id="green">
+        </div>
+      </div>
+    </div>
 
-      socket.on('message', function(data) {
-          console.log(data.message);
-      });
+    <div class="row">
+      <div class="small-12 columns">
+        <div class="small-9 columns">
+          <div class="slider" id="bSlider" data-slider data-start="0" data-end="255">
+            <span class="slider-handle" id="bHandle" data-slider-handle role="slider" tabindex="1" aria-controls="blue"></span>
+            <span class="slider-fill" data-slider-fill></span>
+          </div>
+        </div>
+        <div class="small-3 columns">
+          <input type="number" id="blue">
+        </div>
+      </div>
+    </div>
 
-      $('#toggle').click(function() {
-        socket.emit('message', {'message': 'rgbToggle'});
-      });
+    <br>
 
-      $('#on').click(function() {
-        socket.emit('message', {'message': 'rgbOn'});
-      });
+    <div class="row">
+        <div class="small-6 columns">
+          <div class="row">
+            <div class="small-3 columns">
+              <label for="fade" class="text-right">Fade (ms): </label>
+            </div>
+            <div class="small-8 columns">
+              <input type="number" id="fade" min="0" placeholder="Fade">
+            </div>
+            <div class="small-1 columns"></div>
+          </div>
+        </div>
+        <div class="small-6 columns">
+          <div class="row">
+            <div class="small-3 columns">
+              <label for="flick" class="text-right">Flick (ms): </label>
+            </div>
+            <div class="small-8 columns">
+              <input type="number" id="flick" min="0" placeholder="Flick">
+            </div>
+            <div class="small-1 columns"></div>
+          </div>
+        </div>
+    </div>
 
-      $('#off').click(function() {
-        socket.emit('message', {'message': 'rgbOff'});
-      });
+    <br>
 
-      $('#party').click(function() {
-        var vals = {'r': 255,
-                    'g': 255,
-                    'b': 255,
-                    't_dim': 0,
-                    'ms_flick': 50
-                    };
-        socket.emit('message', {'message': 'rgbChange', 'values': vals});
-      });
+    <div class="row">
+      <div class="small-12 columns">
+        <a class="expanded button" id="toggle" href="#">Toggle</a>
+      </div>
+    </div>
 
-      var d = new Date();
-      var last_send = d.getMilliseconds();
-
-      // With JQuery
-      var rSlider = $('#ex1').slider();
-
-
-      var gSlider = $('#ex2').slider();
-
-      var bSlider = $('#ex3').slider();
-
-      function sendValues() {
-        var vals = {'r': rSlider[0].value,
-                    'g': gSlider[0].value,
-                    'b': bSlider[0].value,
-                    't_dim': $('#fade').val(),
-                    //'ms_flick': $('#flick').val(),
-                    };
-        socket.emit('message', {'message': 'rgbChange', 'values': vals});
-      }
-
-      $("#flick").change(function(e) {
-        socket.emit('message', {'message': 'rgbFlick',
-                                'values': {'ms_flick': e.target.value}
-                              });
-      });
-
-      rSlider.on('change', function(data) {
-        sendValues();
-      });
-
-      gSlider.on('change', function(data) {
-        sendValues();
-      });
-
-      bSlider.on('change', function(data) {
-        sendValues();
-      });
-
-
-      socket.on('initial', function(data) {
-        var values = data.values;
-        console.log(data);
-        rSlider.slider('setValue', values.r);
-        gSlider.slider('setValue', values.g);
-        bSlider.slider('setValue', values.b);
-        $("#flick").val(values.t_dim);
-        $("#flick").val(values.ms_flick);
-      });
+    <div class="row">
+      <div class="small-6 columns">
+        <a class="success expanded button" id="on" href="#">On</a>
+      </div>
+        <div class="small-6 columns">
+          <a class="secondary expanded button" id="off" href="#">Off</a>
+        </div>
+    </div>
 
 
-    </script>
+        <script type="text/javascript" src="app.js"></script>
+
   </body>
 
 

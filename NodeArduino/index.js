@@ -16,23 +16,44 @@ var server = http.createServer(function (req, res) {
   var parsedURL = URL.parse(req.url, true);
   console.log("[HTTP] New request " + parsedURL.pathname);
 
-  switch (parsedURL.pathname) {
-    case '/':
-      fs.readFile('public/html/index.html', function (err, content) {
-        if (err) {
-          res.writeHead(500);
-          res.end();
-        } else {
-          res.writeHead(200, {'Content-Type': 'text/html'});
-          res.end(content, 'utf-8');
-        }
-      });
-      /*var rgbpacket = arduino.createRGBPacket(0);
-      rgbpacket.getCurrent();
-      arduino.sendStripPacket(rgbpacket, req, res);
-      */
-      break;
-  };
+  if (req.url.indexOf('.js') != -1) {
+    fs.readFile(__dirname + '/public/js' + parsedURL.pathname, function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+
+      res.writeHead(200, {'Content-Type': 'text/javascript'});
+      res.write(data);
+      res.end();
+    });
+  } else if(req.url.indexOf('.css') != -1) {
+    fs.readFile(__dirname + '/public/css' + parsedURL.pathname, function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+      res.writeHead(200, {'Content-Type': 'text/css'});
+      res.write(data);
+      res.end();
+    });
+  } else {
+    switch (parsedURL.pathname) {
+      case '/':
+        fs.readFile('./public/html/index.html', function (err, content) {
+          if (err) {
+            res.writeHead(500);
+            res.end();
+          } else {
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.end(content, 'utf-8');
+          }
+        });
+        /*var rgbpacket = arduino.createRGBPacket(0);
+        rgbpacket.getCurrent();
+        arduino.sendStripPacket(rgbpacket, req, res);
+        */
+        break;
+    };
+  }
 });
 
 
