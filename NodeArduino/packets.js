@@ -163,7 +163,7 @@ RGBPacket.prototype.getBuffer = function() {
   buffer.writeUInt8(this.b, 6);  //b
   buffer.writeUInt8(this.instruction, 7);    //instruction
   buffer.writeUInt16LE(this.ms_flick, 8); //ms_flick
-  buffer.writeUInt16BE(this.t_dim, 10); //t_dim
+  buffer.writeUInt16LE(this.t_dim, 10); //t_dim
   buffer.write(this.endBits, 12);
   buffer.write(this.startBits, 0);
 

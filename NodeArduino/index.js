@@ -38,7 +38,7 @@ var server = http.createServer(function (req, res) {
   } else {
     switch (parsedURL.pathname) {
       case '/':
-        fs.readFile('./public/html/index.html', function (err, content) {
+        fs.readFile(__dirname + '/public/html/index.html', function (err, content) {
           if (err) {
             res.writeHead(500);
             res.end();
@@ -80,7 +80,8 @@ listener.on('connection', function(connection) {
   });
 
   connection.on('message', function(data) {
-    console.log('[WS] Received message from client');
+    console.log('[WS] Received message from client: ' + data.message);
+    
     if (data.message === "rgbToggle") {
       arduino.rgbToggle(1);
     } else if (data.message === "rgbChange") {
@@ -95,182 +96,4 @@ listener.on('connection', function(connection) {
   });
 });
 
-
-
-
-
 console.log('Up, running and ready for action!!!');
-
-      /*
-        case '/api/strip/change':
-            if (req.method === 'POST') {
-                // Extract the data sorted in the POST body
-                var body = '';
-                req.on('data', function (dataChunk) {
-                    body += dataChunk;
-                });
-
-                req.on ('end', function () {
-                    // Done pulling data from the Post body.
-                    // Turn it into JSON and proceed to store it in the database.
-                    if (body != '') {
-
-                        var postJSON = JSON.parse(body); //prevent parse error
-
-                        var rgbpacket = new packets.RGBPacket(postJSON.id);
-                        rgbpacket.processPacket(postJSON);
-
-                        if (Object.keys(rgbpacket).length) {
-                            sp.sendStripPacket(rgbpacket, req, res);
-                        } else {
-                            res.writeHead(400, {});
-                            res.end('All mandatory fields must be provided');
-                        }
-                    } else {
-                        res.writeHead(400, {});
-                        res.end('All mandatory fields must be provided');
-                    }
-                });
-            } else {
-                res.writeHead(405, {});
-                res.end();
-            }
-        break;
-
-        case '/api/strip/on':
-            if (req.method === 'POST') {
-                var body = '';
-                req.on('data', function (dataChunk) {
-                    body += dataChunk;
-                });
-
-                req.on ('end', function () {
-                    if (body != '') {
-                        var postJSON = JSON.parse(body); //prevent parse error
-                        console.log(postJSON);
-                        var rgbpacket = new packets.RGBPacket(postJSON.id);
-
-                        rgbpacket.turnOn();
-                        sp.sendStripPacket(rgbpacket, req, res);
-                    } else {
-                        res.writeHead(400, {});
-                        res.end('All mandatory fields must be provided');
-                    }
-                });
-
-            } else {
-                res.writeHead(405, {});
-                res.end();
-            }
-        break;
-
-        case '/api/strip/off':
-            if (req.method === 'POST') {
-                var body = '';
-                req.on('data', function (dataChunk) {
-                    body += dataChunk;
-                });
-
-                req.on ('end', function () {
-                    if (body != '') {
-                        var postJSON = JSON.parse(body); //prevent parse error
-                        var rgbpacket = new packets.RGBPacket(postJSON.id);
-
-                        rgbpacket.turnOff();
-                        sp.sendStripPacket(rgbpacket, req, res);
-                    } else {
-                        res.writeHead(400, {});
-                        res.end('All mandatory fields must be provided');
-                    }
-                 });
-            } else {
-                res.writeHead(405, {});
-                res.end();
-            }
-
-        break;
-
-        case '/api/strip/toggle':
-            if (req.method === 'POST') {
-                var body = '';
-                req.on('data', function (dataChunk) {
-                    body += dataChunk;
-                });
-
-                req.on ('end', function () {
-                    if (body != '') {
-                        var postJSON = JSON.parse(body); //prevent parse error
-                        var rgbpacket = new packets.RGBPacket(postJSON.id);
-
-                        rgbpacket.toggle();
-                        sp.sendStripPacket(rgbpacket, req, res);
-                    } else {
-                        res.writeHead(400, {});
-                        res.end('All mandatory fields must be provided');
-                    }
-                 });
-            } else {
-                res.writeHead(405, {});
-                res.end();
-            }
-        break;
-
-        case '/api/strip/getCurrent':
-            if (req.method === 'POST') {
-                var body = '';
-                req.on('data', function (dataChunk) {
-                    body += dataChunk;
-                });
-
-                req.on ('end', function () {
-                    if (body != '') {
-                        var postJSON = JSON.parse(body); //prevent parse error
-                        var rgbpacket = new packets.RGBPacket(postJSON.id);
-
-                        rgbpacket.getCurrent();
-                        sp.sendStripPacket(rgbpacket, req, res);
-                    } else {
-                        res.writeHead(400, {});
-                        res.end('All mandatory fields must be provided');
-                    }
-                 });
-            } else {
-                res.writeHead(405, {});
-                res.end();
-            }
-        break;
-
-        case '/api/strip/getStored':
-            if (req.method === 'POST') {
-                var body = '';
-                req.on('data', function (dataChunk) {
-                    body += dataChunk;
-                });
-
-                req.on ('end', function () {
-                    if (body != '') {
-                        var postJSON = JSON.parse(body); //prevent parse error
-                        var rgbpacket = new packets.RGBPacket(postJSON.id);
-
-                        rgbpacket.getStored();
-                        sp.sendStripPacket(rgbpacket, req, res);
-                    } else {
-                        res.writeHead(400, {});
-                        res.end('All mandatory fields must be provided');
-                    }
-                 });
-            } else {
-                res.writeHead(405, {});
-                res.end();
-            }
-        break;
-
-        default:
-            res.writeHead(404, {});
-            res.end('You shall not pass!!!!');
-        break;
-
-    }
-
-});
-*/
