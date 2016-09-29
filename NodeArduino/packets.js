@@ -156,8 +156,8 @@ RGBPacket.prototype.interpreteSerialBuffer = function(buffer) {
 
 RGBPacket.prototype.getBuffer = function() {
   buffer = Buffer.alloc(14);
-  buffer.writeUInt8(this.id, 2);    // pipe
-  buffer.writeUInt8(0, 3);    //payload size
+  buffer.writeUInt8(this.id, 2);    // destination id
+  buffer.writeUInt8(0, 3);    // sender id
   buffer.writeUInt8(this.r, 4);    //r
   buffer.writeUInt8(this.g, 5);    //g
   buffer.writeUInt8(this.b, 6);  //b
