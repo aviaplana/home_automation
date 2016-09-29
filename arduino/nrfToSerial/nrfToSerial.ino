@@ -69,7 +69,7 @@ void loop() {
      */
     Serial.print("\\B");
     Serial.write(buffer_ser[0]); //type 
-    for (int i = 0; i < buffer_ser[1]-1; i++) {
+    for (int i = 0; i < buffer_ser[1]; i++) {
       Serial.write(buffer_ser[i + 2]);
     }
     Serial.print("\\E");
@@ -103,7 +103,7 @@ bool checkMsg() {
     } else if (c == '\\') {
       pre_end = pos;
     } else if ((pre_end + 1 == pos) && (c == 'E')) {
-      payloadSize = pos - 5; // \B + id + \E = 5 Bytes.
+      payloadSize = pos - 4; // \B + id + \E = 5 Bytes - 1 (position 0).
       return true;
     } else {
       buffer_ser[pos - 3] = c;      

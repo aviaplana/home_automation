@@ -49,6 +49,7 @@ unsigned char r_goal;
 unsigned char g_goal;
 unsigned char b_goal;
 
+unsigned int t_dim = 0;
 unsigned int ms_flick = 0;
 unsigned int dim_tics = 0;
 unsigned int dim_int = 30;
@@ -72,6 +73,8 @@ void setup() {
   b = 0;
 
   readEeprom(&packet);
+  
+  t_dim = packet.t_dim;
   
   processPacket();
 
@@ -170,6 +173,7 @@ void processPacket() {
       break;
       
     case INSTRUCTION::STORE:
+      packet.t_dim = t_dim;
       storeDefaults();
       break;
       
@@ -203,8 +207,7 @@ void processPacket() {
       packet_ret.pck.g = g;
       packet_ret.pck.b = b;
       packet_ret.pck.ms_flick = ms_flick;
-      // Nonsense since it's being overriden every time we receive a packet.
-      packet_ret.pck.t_dim = packet.t_dim;
+      packet_ret.pck.t_dim = t_dim;
       packet_ret.pck.instruction = INSTRUCTION::GET_CURRENT;
       
       if (light_on) {
@@ -231,6 +234,8 @@ void processPacket() {
 
 
 void applyColorPacket() {
+  t_dim = packet.t_dim;
+  
   if (packet.t_dim > 0) {
     dimLight();
   } else {
@@ -253,7 +258,7 @@ void applyFlickPacket() {
 
 
 void dimLight() {
-  dim_tics = round((float)packet.t_dim / (float)dim_int);
+  dim_tics = round((float)t_dim / (float)dim_int);
   
   r_goal = packet.r;
   g_goal = packet.g;
