@@ -1,17 +1,19 @@
 import serial
+from Queue import Queue, Empty
 from packet import Packet
 from rgb_packet import RgbPacket
 from multiprocessing import Process
 from interruptingcow import timeout
+from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
 
 
 class Arduino(Process):
 
-    def __init__(self, receive_pipe, send_pipe):
+    def __init__(self, pipe):
         Process.__init__(self)
         self.ser = ""
-        self.receive_pipe = receive_pipe
-        self.send_pipe = send_pipe
+        self.pipe = pipe
+        self.pipe = pipe
 
     def read_data(self):
         pos = 0
@@ -86,15 +88,17 @@ class Arduino(Process):
                                         break
                         except RuntimeError:
                             print("Response timed out")
-                            self.send_pipe.send((id_node, "Confirmation timed out"))
+                            self.pipe.send((id_node, "Confirmation timed out"))
                             return None
 
                         # TODO: Make sure that we have a confirmation packet
                         rec_id, rec_res = response
 
+                        print("Got confirmation from " + str(rec_id) + ": " + str(rec_res))
+
                         # let's get the response
                         if not will_reply:
-                            self.send_pipe.send((id_node, "OK" if rec_res else "KO"))
+                            self.pipe.send((id_node, "OK" if rec_res else "KO"))
 
                         else:
                             try:
@@ -107,10 +111,10 @@ class Arduino(Process):
                                             break
                             except RuntimeError:
                                 print("Response timed out")
-                                self.send_pipe.send((id_node, "Response timed out"))
+                                self.pipe.send((id_node, "Response timed out"))
                                 return None
 
-                            self.send_pipe()
+                            self.pipe()
                     else:
                         print("Serial not opened")
                 else:
@@ -121,15 +125,26 @@ class Arduino(Process):
         port = '/dev/tty.wchusbserial1d1120'
         baud = 9600
         self.ser = serial.Serial(port, baud)
+        queue = Queue()
+
+        # New thread that will listen the pipe
+        nbpl = NBPL(self.pipe, queue)
+        nbpl.setDaemon(True)
+        nbpl.start()
+
+        print("Starting arduino...")
 
         while True:
             packet = self.read_data()
+
             if packet:
                 print "Received packet type " + str(packet["type"]) + ": "
-                print self.decode_packet(packet)
+                self.pipe.send(self.decode_packet(packet))
 
-            received = self.receive_pipe.recv()
-            if received:
+            try:
+                received = queue.get(False)
+            except Empty:
+                pass
+            else:
+                print(received)
                 self.process_received(received)
-
-

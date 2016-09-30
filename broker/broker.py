@@ -1,8 +1,9 @@
 import socket
 import argparse
 from multiprocessing import Process, Pipe
-
-import arduino
+from arduino import Arduino
+from Queue import Queue, Empty
+from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
 
 
 # Socket params
@@ -27,7 +28,7 @@ def server(port):
     while True:
         print "Waiting for clients..."
         client, address = sock.accept()
-        data = client.recv(data_payload)
+        data = client.recv(1024)
 
         if data:
             print "Received: %s" % data
@@ -37,9 +38,6 @@ def server(port):
         client.close()
 
 
-def start_arduino():
-    arduino.start_serial()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sensor manager')
     parser.add_argument('--port', action="store", dest="port", type=int, required=True)
@@ -47,18 +45,25 @@ if __name__ == '__main__':
     port = given_args.port
 
     parent, child = Pipe()
-    proc = Process(target=start_arduino(), args=(child))
+
     # Starts the process
-    proc.start()
+    arduino_proc = Arduino(child)
+    arduino_proc.start()
 
-    # send data
+    queue = Queue()
 
+    # Creates a new thread that will be listening the pipe
+    nbpl = NBPL(parent, queue)
+    nbpl.setDaemon(True)
+    nbpl.start()
 
+    while True:
+        try:
+            received = queue.get(False)
+        except Empty:
+            pass
+        else:
+            # We got a message from the Arduino.
+            print(received)
 
-    try:
-        thread.start_new_thread(arduino.start_serial(), "Thread serial")
-    except:
-        print "Couldn't start new thread"
-
-    #server(port)
 
