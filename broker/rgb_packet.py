@@ -13,7 +13,8 @@ class RgbPacket(Packet):
     instructions = {"set_all": 0, "set_defaults": 1,
                     "turn_on": 2, "turn_off": 3, "toggle": 4,
                     "change_color": 10, "change_blinking": 11,
-                    "get_current": 20, "get_defaults": 21
+                    "get_current": 20, "get_defaults": 21,
+                    "error": 63
                     }
 
     def __init__(self):
@@ -37,7 +38,7 @@ class RgbPacket(Packet):
 
         # 20 - Current status of the strip
         # 21 - Default values stored in the EEPROM
-        if self.instruction in [20, 21]:
+        if self.instruction in [self.instructions["get_current"], self.instructions["get_defaults"]]:
             self.is_on = values[4] & 0x80
             self.id = values[0]
             self.r = values[1]
@@ -47,11 +48,11 @@ class RgbPacket(Packet):
             self.t_dim = values[6]
 
         # ERROR
-        elif self.instruction == 63:
+        elif self.instruction == self.instructions["error"]:
             self.id = values[0]
 
     def get_values(self):
-        if self.instruction in [20, 21]:
+        if self.instruction in [self.instructions["get_current"], self.instructions["get_defaults"]]:
             return {"id": self.id, "r": self.r, "g": self.g, "b": self.b, "is_on": self.is_on,
                     "ms_flick": self.ms_flick, "t_dim": self.t_dim,
                     "instruction": self.instructions.keys()[self.instructions.values().index(self.instruction)]}

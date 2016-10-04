@@ -13,7 +13,6 @@ class Arduino(Process):
         Process.__init__(self)
         self.ser = ""
         self.pipe = pipe
-        self.pipe = pipe
 
     def read_data(self):
         pos = 0
@@ -28,8 +27,10 @@ class Arduino(Process):
         while True:
             c = self.ser.read()
             if pos == 0 and c != '\\':
+                print("2")
                 return None
             elif pos == 1 and c != 'B':
+                print("1")
                 return None
             elif pos == 2:
                 type_pkt = int(c.encode('hex'), 16)
@@ -37,9 +38,11 @@ class Arduino(Process):
                 if c == '\\':
                     prev = pos
                 elif (pos - 1) == prev and c == 'E':
+                    print("got one")
                     return {"type": type_pkt, "payload": buff}
                 elif pos > max_size:
-                    return
+                    print("entra")
+                    return None
                 else:
                     buff.append(c)
 
@@ -58,6 +61,10 @@ class Arduino(Process):
 
         else:
             return None
+
+    @staticmethod
+    def build_error(node_id, error_msg):
+        return {"id": node_id, "instruction": "error", "message": error_msg}
 
     # received structure: (id, action, [values])
     def process_received(self, received):
@@ -88,17 +95,16 @@ class Arduino(Process):
                                         break
                         except RuntimeError:
                             print("Response timed out")
-                            self.pipe.send((id_node, "Confirmation timed out"))
+                            self.pipe.send(self.build_error(id_node, "Confirmation timed out"))
                             return None
 
                         # TODO: Make sure that we have a confirmation packet
-                        rec_id, rec_res = response
 
-                        print("Got confirmation from " + str(rec_id) + ": " + str(rec_res))
+                        print("Got confirmation from " + str(response["id"]) + ": " + str(response["success"]))
 
                         # let's get the response
                         if not will_reply:
-                            self.pipe.send((id_node, "OK" if rec_res else "KO"))
+                            self.pipe.send(response)
 
                         else:
                             try:
@@ -111,10 +117,12 @@ class Arduino(Process):
                                             break
                             except RuntimeError:
                                 print("Response timed out")
-                                self.pipe.send((id_node, "Response timed out"))
+                                self.pipe.send(self.build_error(id_node, "Response timed out"))
                                 return None
 
-                            self.pipe()
+                            else:
+                                # All good. Send response to the main process.
+                                self.pipe.send(received)
                     else:
                         print("Serial not opened")
                 else:
@@ -122,7 +130,7 @@ class Arduino(Process):
 
     # Method called when the process is started
     def run(self):
-        port = '/dev/tty.wchusbserial1d1120'
+        port = '/dev/tty.wchusbserial1420'
         baud = 9600
         self.ser = serial.Serial(port, baud)
         queue = Queue()
@@ -133,13 +141,16 @@ class Arduino(Process):
         nbpl.start()
 
         print("Starting arduino...")
+        self.ser.reset_input_buffer()
+        self.ser.reset_output_buffer()
 
         while True:
             packet = self.read_data()
 
             if packet:
                 print "Received packet type " + str(packet["type"]) + ": "
-                self.pipe.send(self.decode_packet(packet))
+                decoded = self.decode_packet(packet)
+                self.pipe.send(decoded.get_values) # id, packet
 
             try:
                 received = queue.get(False)

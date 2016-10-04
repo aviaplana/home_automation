@@ -1,6 +1,7 @@
 from threading import Thread
 
 
+# This thread just listens for messages from the pipe. If it receives a new one, it puts it in the queue.
 class NonBlockingPipeListener(Thread):
 
     def __init__(self, pipe, queue):
