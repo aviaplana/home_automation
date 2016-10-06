@@ -31,11 +31,11 @@ class RgbPacket(Packet):
         values = struct.unpack("=5B2H", bytearray(received_buffer))
         ins = values[4] & 0x3F
 
-        if ins not in self.instructions.keys():
+        if ins not in self.instructions.values():
             return None
 
         self.instruction = ins
-
+        
         # 20 - Current status of the strip
         # 21 - Default values stored in the EEPROM
         if self.instruction in [self.instructions["get_current"], self.instructions["get_defaults"]]:
