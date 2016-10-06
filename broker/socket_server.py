@@ -3,6 +3,7 @@ from Queue import Queue, Empty
 from nonblocking_socket_listener import NonBlockingSocketListener as NBSL
 from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
 import socket
+import time
 import json
 
 
@@ -74,4 +75,6 @@ class SocketServer(Process):
                     print "No socket found for", client
 
                 self.process_received(received)
+
+            time.sleep(0.001) # Reduce CPU consumption
 

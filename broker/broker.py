@@ -75,4 +75,4 @@ if __name__ == '__main__':
             print("Received from client ")
             print(sock_node)
 
-        time.sleep(0.01) # Reduce CPU consumption
+        time.sleep(0.001) # Reduce CPU consumption

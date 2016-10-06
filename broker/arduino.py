@@ -1,4 +1,5 @@
 import serial
+import time
 from Queue import Queue, Empty
 from packet import Packet
 from rgb_packet import RgbPacket
@@ -130,7 +131,7 @@ class Arduino(Process):
 
     # Method called when the process is started
     def run(self):
-        port = '/dev/tty.wchusbserial1420'
+        port = '/dev/tty.wchusbserial1410'
         baud = 9600
         self.ser = serial.Serial(port, baud)
         queue = Queue()
@@ -150,7 +151,7 @@ class Arduino(Process):
             if packet:
                 print "Received packet type " + str(packet["type"]) + ": "
                 decoded = self.decode_packet(packet)
-                self.pipe.send(decoded.get_values) # id, packet
+                self.pipe.send(decoded.get_values()) # id, packet
 
             try:
                 received = queue.get(False)
@@ -159,3 +160,5 @@ class Arduino(Process):
             else:
                 print(received)
                 self.process_received(received)
+
+            time.sleep(0.001) # Reduce CPU consumption
