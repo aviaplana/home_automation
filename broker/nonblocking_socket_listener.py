@@ -15,7 +15,6 @@ class NonBlockingSocketListener(Thread):
             conn, address = self.socket.accept()
             data = conn.recv(1024)
             if data:
-                # print "Received: %s" % data
+                #print "Received: %s" % data
                 json_data = json.loads(data)
-
                 self.queue.put((address, conn, json_data))

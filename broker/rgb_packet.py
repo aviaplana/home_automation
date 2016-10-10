@@ -10,12 +10,6 @@ from packet import Packet
 
 
 class RgbPacket(Packet):
-    instructions = {"set_all": 0, "set_defaults": 1,
-                    "turn_on": 2, "turn_off": 3, "toggle": 4,
-                    "change_color": 10, "change_blinking": 11,
-                    "get_current": 20, "get_defaults": 21,
-                    "error": 63
-                    }
 
     def __init__(self):
         super(RgbPacket, self).__init__()
@@ -26,6 +20,12 @@ class RgbPacket(Packet):
         self.instruction = 0
         self.ms_flick = 0
         self.t_dim = 0
+        self.instructions = {"set_all": 0, "set_defaults": 1,
+                    "turn_on": 2, "turn_off": 3, "toggle": 4,
+                    "change_color": 10, "change_blinking": 11,
+                    "get_current": 20, "get_defaults": 21,
+                    "error": 63
+                    }
 
     def interpret(self, received_buffer):
         values = struct.unpack("=5B2H", bytearray(received_buffer))
@@ -35,7 +35,7 @@ class RgbPacket(Packet):
             return None
 
         self.instruction = ins
-        
+
         # 20 - Current status of the strip
         # 21 - Default values stored in the EEPROM
         if self.instruction in [self.instructions["get_current"], self.instructions["get_defaults"]]:

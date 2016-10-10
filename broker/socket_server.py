@@ -16,6 +16,11 @@ class SocketServer(Process):
         self.port = port
         self.pipe = pipe
 
+    def process_received(self, pkt):
+        if pkt["instruction"] == "get_instructions":
+            return
+        print pkt
+
     def run(self):
         # Socket params
         host = 'localhost'
@@ -54,7 +59,9 @@ class SocketServer(Process):
                 pass
             else:
                 address, connection, data = received
+
                 self.sockets[address] = connection
+                self.process_received(data)
                 self.pipe.send((address, data))
 
             # Checks for messages from the main thread
@@ -74,7 +81,7 @@ class SocketServer(Process):
                 else:
                     print "No socket found for", client
 
-                self.process_received(received)
+                #self.process_received(received)
 
             time.sleep(0.001) # Reduce CPU consumption
 

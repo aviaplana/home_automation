@@ -28,10 +28,8 @@ class Arduino(Process):
         while True:
             c = self.ser.read()
             if pos == 0 and c != '\\':
-                print("2")
                 return None
             elif pos == 1 and c != 'B':
-                print("1")
                 return None
             elif pos == 2:
                 type_pkt = int(c.encode('hex'), 16)
@@ -42,7 +40,6 @@ class Arduino(Process):
                     print("got one")
                     return {"type": type_pkt, "payload": buff}
                 elif pos > max_size:
-                    print("entra")
                     return None
                 else:
                     buff.append(c)
@@ -131,7 +128,7 @@ class Arduino(Process):
 
     # Method called when the process is started
     def run(self):
-        port = '/dev/tty.wchusbserial1410'
+        port = '/dev/tty.wchusbserial1d1130'
         baud = 9600
         self.ser = serial.Serial(port, baud)
         queue = Queue()

@@ -1,17 +1,71 @@
+# Main process. Keeps track of the communications among socket and Arduino. It also manages the database.
+
 import argparse
 import time
+from pymongo import MongoClient
 from multiprocessing import Pipe
 from arduino import Arduino
 from socket_server import SocketServer
 from Queue import Queue, Empty
 from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
 
-sock_node = {}  # id node, socket
+sock_node = {}  # id_node: socket
+nodes = {}      # id_node: type
+
+# Database parameters
+db = None
+db_host = "localhost"
+db_port = "27017"
+db_user = ""
+db_password = ""
+
 
 def process_arduino(data, pipe):
     if data["instruction"] == "confirmation":
+        # FIFO. Pops the oldest socket related to the node.
         client = sock_node[data["id"]].pop()
         pipe.send((client, data))
+
+
+def init_arduino():
+    # Arduino process
+    parent_pipe, child_pipe = Pipe()
+
+    # Starts the process
+    proc = Arduino(child_pipe)
+    proc.start()
+
+    queue = Queue()
+
+    # Creates a new thread that will be listening the pipe
+    nbpl = NBPL(parent_pipe, queue)
+    nbpl.setDaemon(True)
+    nbpl.start()
+
+    return parent_pipe, queue
+
+
+def init_socket():
+    # Socket process
+    parent_pipe, child_pipe = Pipe()
+
+    # Starts the process
+    proc = SocketServer(port, child_pipe)
+    proc.start()
+
+    queue = Queue()
+
+    # Creates a new thread that will be listening the pipe
+    nbpl = NBPL(parent_pipe, queue)
+    nbpl.setDaemon(True)
+    nbpl.start()
+    return parent_pipe, queue
+
+
+def init_database():
+    client = MongoClient(db_host, db_port, db_user, db_password)
+    db = client.home_automation
+    db.nodes.find("", {"id": 1, "type": 1})
 
 
 if __name__ == '__main__':
@@ -20,33 +74,9 @@ if __name__ == '__main__':
     given_args = parser.parse_args()
     port = given_args.port
 
-    # Arduino process
-    arduino_parent_pipe, arduino_child_pipe = Pipe()
-
-    # Starts the process
-    arduino_proc = Arduino(arduino_child_pipe)
-    arduino_proc.start()
-
-    queue_arduino = Queue()
-
-    # Creates a new thread that will be listening the pipe
-    nbpl_arduino = NBPL(arduino_parent_pipe, queue_arduino)
-    nbpl_arduino.setDaemon(True)
-    nbpl_arduino.start()
-
-    # Socket process
-    socket_parent_pipe, socket_child_pipe = Pipe()
-
-    # Starts the process
-    socket_proc = SocketServer(port, socket_child_pipe)
-    socket_proc.start()
-
-    queue_socket = Queue()
-
-    # Creates a new thread that will be listening the pipe
-    nbpl_socket = NBPL(socket_parent_pipe, queue_socket)
-    nbpl_socket.setDaemon(True)
-    nbpl_socket.start()
+    arduino_parent_pipe, queue_arduino = init_arduino()
+    socket_parent_pipe, queue_socket = init_socket()
+    init_database()
 
     while True:
         try:
