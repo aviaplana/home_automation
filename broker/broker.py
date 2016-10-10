@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
     arduino_parent_pipe, queue_arduino = init_arduino()
     socket_parent_pipe, queue_socket = init_socket()
-    init_database()
+    # init_database()
 
     while True:
         try:

@@ -9,6 +9,7 @@ from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
 
 
 class Arduino(Process):
+    packet_types = {"confirmation": 1, "rgb": 20}
 
     def __init__(self, pipe):
         Process.__init__(self)
@@ -49,10 +50,10 @@ class Arduino(Process):
     @staticmethod
     def decode_packet(packet):
         # TODO:  Should specify which kind of packet we are returning
-        if packet["type"] == 1:
+        if packet["type"] == Arduino.packet_types["confirmation"]:
             return Packet.interpret_response(packet["payload"])
 
-        elif packet["type"] == 10:
+        elif packet["type"] == Arduino.packet_types["rgb"]:
             rgb_packet = RgbPacket()
             rgb_packet.interpret(packet["payload"])
             return rgb_packet

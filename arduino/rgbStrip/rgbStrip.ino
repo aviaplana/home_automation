@@ -7,7 +7,6 @@
 #define PIN_R 3
 #define PIN_G 5
 #define PIN_B 6
-#define TYPE 10 // Node type (RGB)
 
 enum RGB_INSTRUCTION : unsigned char {
   ALL = 0, STORE = 1, ON = 2, OFF = 3, TOGGLE = 4,
@@ -17,9 +16,9 @@ enum RGB_INSTRUCTION : unsigned char {
 };
 
 enum PACKET_TYPES : unsigned char {
-  PING = 0, 
+  PING = 0, CONFIRMATION = 1,
   INIT_REQ = 2, INIT_RES = 3, INIT_INFO_REQ = 4, INIT_INFO_RES = 5, INIT_RESET = 6,  
-  RGB = 10
+  RGB = 20
 };
 
 struct RGB_PCK {
@@ -209,7 +208,7 @@ void processPacket(char *buff) {
         
       case PACKET_TYPES::INIT_INFO_REQ:
         gen_packet.init_info_res.pipe = pipe;
-        gen_packet.init_info_res.type = TYPE;
+        gen_packet.init_info_res.type = PACKET_TYPES::RGB;
         sendPacket(PACKET_TYPES::INIT_INFO_RES);
         break;
         
@@ -225,7 +224,7 @@ void buildInit() {
   hash = random(65535);
 
   gen_packet.init_req.hash = hash;
-  gen_packet.init_req.type = TYPE;  
+  gen_packet.init_req.type = PACKET_TYPES::RGB;  
   pipe = NULL;
 }
 
