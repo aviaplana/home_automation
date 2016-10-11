@@ -10,7 +10,7 @@ Field | \B | Payload size | Type | ID | Payload | \E
  + **\B** : Initial sequence.
  + **Payload size** : Length of the payload, in Bytes.
  + **Type** : Payload type.
- + **ID** : ID of the node that will receive the packet.
+ + **ID** : ID of the node that is sending packet.
  + **Payload** : The information to send.
  + **\E** : Ending sequence.
 
