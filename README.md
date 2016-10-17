@@ -127,10 +127,10 @@ Field | ID
 ###ADD NODE
 This packet is sent by the broker to the main node through serial communication.  Adds a node to the node list.
 
-Field | ID | Hash
+Field | ID | Pipe
 ------|:----:|:----:
-**Bytes** | 1 | 2  
+**Bytes** | 1 | 1  
 
-+ **Hash** : Hash number specified in the INIT REQUEST packet. 
++ **Pipe** : Piipe assigned to the node. 
 + **ID** : ID number assigned to the node.
 
