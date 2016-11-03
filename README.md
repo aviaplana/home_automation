@@ -10,7 +10,7 @@ Field | \B | Payload size | Type | ID | Payload | \E
  + **\B** : Initial sequence.
  + **Payload size** : Length of the payload, in Bytes.
  + **Type** : Payload type.
- + **ID** : ID of the node that will receive the packet.
+ + **ID** : ID of the node that is sending packet.
  + **Payload** : The information to send.
  + **\E** : Ending sequence.
 
@@ -57,6 +57,7 @@ RGB          |  20
 ##Payloads
 ###RGB
 Used to interact with the RGB led strip.
+
 Field     | R | G | B | Is on | Reserved | Instruction | Blink freq. | Fade dur.
 ----------|:-:|:-:|:-:|:-----:|:--------:|:-----------:|:-----------:|:--------:
           |   |   |   | 1 bit |  1 bit   |   6 bits    |             | 
@@ -86,19 +87,23 @@ Error              | 63
 
 ###INIT REQUEST
 Requests initialization information to the broker. Sent by the nodes.
+
 Field | Hash | Type
 ------|:----:|:----:
 **Bytes** | 2 | 1  
- + **Hash** : Random number used to identify the node that sent the packet.
- + **Type** : Node type (RGB, temperature sensor...).
+
++ **Hash** : Random number used to identify the node that sent the packet.
++ **Type** : Node type (RGB, temperature sensor...).
 
 ###INIT RESPONSE
 Requests initialization information to the broker. Sent by the nodes.
+
 Field | Hash | PIPE
 ------|:----:|:----:
 **Bytes** | 2 | 1  
- + **Hash** : Hash number specified in the INIT REQUEST packet. 
- + **Pipe** : Pipe assigned to the node.
+
++ **Hash** : Hash number specified in the INIT REQUEST packet. 
++ **Pipe** : Pipe assigned to the node.
 
 ###INIT INFO RESPONSE PACKET
 Sends the actual initialization information of the node. Sent when a INIT INFO REQUEST packet is received.
@@ -106,21 +111,26 @@ Sends the actual initialization information of the node. Sent when a INIT INFO R
 Field | Pipe | Type
 ------|:----:|:----:
 **Bytes** | 1 | 1  
- + **Pipe** : Pipe assigned to the node.
- + **Type** : Node type (RGB, temperature sensor...).
+
++ **Pipe** : Pipe assigned to the node.
++ **Type** : Node type (RGB, temperature sensor...).
 
 ###DELETE NODE
 This packet is sent by the broker to the main node through serial communication.  Deletes a node from the node list.
+
 Field | ID
 ------|:--:
 **Bytes** | 1   
- + **ID** : ID of the node to delete.
+
++ **ID** : ID of the node to delete.
 
 ###ADD NODE
 This packet is sent by the broker to the main node through serial communication.  Adds a node to the node list.
-Field | ID | Hash
+
+Field | ID | Pipe
 ------|:----:|:----:
-**Bytes** | 1 | 2  
- + **Hash** : Hash number specified in the INIT REQUEST packet. 
- + **ID** : ID number assigned to the node.
+**Bytes** | 1 | 1  
+
++ **Pipe** : Piipe assigned to the node. 
++ **ID** : ID number assigned to the node.
 
