@@ -1,21 +1,28 @@
-import serial
 import time
-from Queue import Queue, Empty
-from packet import Packet
-from rgb_packet import RgbPacket
 from multiprocessing import Process
-from interruptingcow import timeout
-from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
 
+import serial
+from Queue import Queue, Empty
+
+from nonblocking_pipe_listener import NonBlockingPipeListener as NBPL
+from packets.packet import Packet
+from packets.rgb import RgbPacket
+from packets.init_request import InitRequestPacket
+from packets.init_response import InitResponsePacket
+from packets.confirmation import ConfirmationPacket
+from packets.add_node import AddNodePacket
+from packets.delete_node import DeleteNodePacket
 
 class Arduino(Process):
-    packet_types = {"confirmation": 1, "rgb": 20}
 
     def __init__(self, pipe):
         Process.__init__(self)
         self.ser = ""
         self.pipe = pipe
 
+    '''
+    Reads the serial port, and returns the received packet.
+    '''
     def read_data(self):
         pos = 0
         type_pkt = 0
@@ -38,7 +45,6 @@ class Arduino(Process):
                 if c == '\\':
                     prev = pos
                 elif (pos - 1) == prev and c == 'E':
-                    print("got one")
                     return {"type": type_pkt, "payload": buff}
                 elif pos > max_size:
                     return None
@@ -49,14 +55,20 @@ class Arduino(Process):
 
     @staticmethod
     def decode_packet(packet):
-        # TODO:  Should specify which kind of packet we are returning
-        if packet["type"] == Arduino.packet_types["confirmation"]:
-            return Packet.interpret_response(packet["payload"])
+        if packet["type"] == Packet.packet_types["confirmation"]:
+            confirmation_packet = ConfirmationPacket()
+            confirmation_packet.interpret_response(packet["payload"])
+            return confirmation_packet
 
-        elif packet["type"] == Arduino.packet_types["rgb"]:
+        elif packet["type"] == Packet.packet_types["rgb"]:
             rgb_packet = RgbPacket()
             rgb_packet.interpret(packet["payload"])
             return rgb_packet
+
+        elif packet["type"] == Packet.packet_types["init_request"]:
+            init_req_packet = InitRequestPacket()
+            init_req_packet.interpret(packet["payload"])
+            return init_req_packet
 
         else:
             return None
@@ -65,71 +77,61 @@ class Arduino(Process):
     def build_error(node_id, error_msg):
         return {"id": node_id, "instruction": "error", "message": error_msg}
 
-    # received structure: (id, action, [values])
+    '''
+    This function processes the information received by the pipe.
+    '''
     def process_received(self, received):
-        id_node = received[0]
-        action = received[1]
+        if "type" not in received.keys():
+            return None
 
-        # TODO: Should track which kind of node is each one. Should have a table with id - type, for instance id 1 -> type rgb
-        if id_node == 1:
-            if action == "send":
-                if received[3]:
-                    result = RgbPacket.create_buffer(received[3])
+        packet = self.prepare_packet(received)
 
-                    if result is None:
-                        return None
+        # for a in packet:
+        #    print hex(ord(a))
 
-                    elif self.ser.isOpen():
-                        # This tells us if we have to expect a response from the node
-                        will_reply = result[0]
-                        self.ser.write(result[1])
+        if packet is None:
+            return None
 
-                        try:
-                            with timeout(0.05, exception=RuntimeError):
-                                # Waits for confirmation
-                                while True:
-                                    packet = self.read_data()
-                                    if packet:
-                                        response = self.decode_packet(packet)
-                                        break
-                        except RuntimeError:
-                            print("Response timed out")
-                            self.pipe.send(self.build_error(id_node, "Confirmation timed out"))
-                            return None
+        if self.ser.isOpen():
+            self.ser.write(packet)
+            return True
 
-                        # TODO: Make sure that we have a confirmation packet
+        else:
+            print "ERROR: Serial port not opened"
+            return None
 
-                        print("Got confirmation from " + str(response["id"]) + ": " + str(response["success"]))
+    @staticmethod
+    def prepare_packet(values):
+        if values["type"] == "rgb":
+            if "values" not in values.keys():
+                return None
+            return RgbPacket.create_buffer(values["values"])
 
-                        # let's get the response
-                        if not will_reply:
-                            self.pipe.send(response)
+        elif values["type"] == "ping":
+            return Packet.create_buffer_ping(values["id"])
 
-                        else:
-                            try:
-                                with timeout(0.05, exception=RuntimeError):
-                                    # Waits for the response
-                                    while True:
-                                        packet = self.read_data()
-                                        if packet:
-                                            response = self.decode_packet(packet)
-                                            break
-                            except RuntimeError:
-                                print("Response timed out")
-                                self.pipe.send(self.build_error(id_node, "Response timed out"))
-                                return None
+        elif values["type"] == "init_response":
+            if "values" not in values.keys():
+                return None
+            return InitResponsePacket.create_buffer(values["id"], values["values"])
 
-                            else:
-                                # All good. Send response to the main process.
-                                self.pipe.send(received)
-                    else:
-                        print("Serial not opened")
-                else:
-                    print("ERROR: No values to send")
+        elif values["type"] == "add_node":
+            if "values" not in values.keys():
+                return None
+            return AddNodePacket.create_buffer(values["values"])
 
-    # Method called when the process is started
+        elif values["type"] == "delete_node":
+            if "values" not in values.keys():
+                return None
+            return DeleteNodePacket.create_buffer(values["values"])
+
+        return None
+
+    '''
+    Method called when the process is started
+    '''
     def run(self):
-        port = '/dev/tty.wchusbserial1d1130'
+        port = '/dev/tty.wchusbserial1d1110'
         baud = 9600
         self.ser = serial.Serial(port, baud)
         queue = Queue()
@@ -147,16 +149,14 @@ class Arduino(Process):
             packet = self.read_data()
 
             if packet:
-                print "Received packet type " + str(packet["type"]) + ": "
                 decoded = self.decode_packet(packet)
-                self.pipe.send(decoded.get_values()) # id, packet
+                self.pipe.send(decoded) # id, packet
 
             try:
                 received = queue.get(False)
             except Empty:
                 pass
             else:
-                print(received)
                 self.process_received(received)
 
             time.sleep(0.001) # Reduce CPU consumption
